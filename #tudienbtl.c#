@@ -1,0 +1,408 @@
+#include <gtk/gtk.h>
+#include "tudien.h"
+gchar *word,*mean;
+info p,p2;
+int kt,kt2;
+void quit(GtkWidget *window,gpointer data)
+{
+	gtk_main_quit();
+}
+static void thongtin(GtkButton *button,GtkWindow *parent)
+{
+  GdkPixbuf *pixbuf = gdk_pixbuf_new_from_file("./image/dict1.png", NULL);
+
+  GtkWidget *dialog = gtk_about_dialog_new();
+  gtk_about_dialog_set_name(GTK_ABOUT_DIALOG(dialog), "Dictionary");
+  gtk_about_dialog_set_version(GTK_ABOUT_DIALOG(dialog), "1.0"); 
+  gtk_about_dialog_set_copyright(GTK_ABOUT_DIALOG(dialog), 
+      "(c) TAO-KIEN-HUNG-TOAN");
+  gtk_about_dialog_set_comments(GTK_ABOUT_DIALOG(dialog), 
+     "Dictionary v1.0 - Easy for searching word.");
+  gtk_about_dialog_set_website(GTK_ABOUT_DIALOG(dialog), 
+      "http://hust.edu.vn");
+  gtk_about_dialog_set_logo(GTK_ABOUT_DIALOG(dialog), pixbuf);
+  g_object_unref(pixbuf), pixbuf = NULL;
+  gtk_dialog_run(GTK_DIALOG (dialog));
+  gtk_widget_destroy(dialog);
+}
+
+void question(GtkWidget *widget, gpointer window)
+{
+  GtkWidget *dialog;
+  gint answer;
+  dialog = gtk_message_dialog_new(GTK_WINDOW(window),
+            GTK_DIALOG_DESTROY_WITH_PARENT,
+            GTK_MESSAGE_QUESTION,
+            GTK_BUTTONS_YES_NO,
+            "Are you sure to quit?");
+  gtk_window_set_title(GTK_WINDOW(dialog), "Question");
+  answer = gtk_dialog_run(GTK_DIALOG(dialog));
+  if (answer == GTK_RESPONSE_YES) 
+    {
+        g_signal_connect(G_OBJECT(window), "destroy",G_CALLBACK(gtk_main_quit),NULL);
+        gtk_widget_destroy (dialog);
+        
+    } 
+  else 
+    {
+        gtk_widget_destroy (dialog);
+	
+    }
+}
+
+
+/*-----------------CHUC NANG THONG BAO -----------------
+---------------------TRONG CUA SO MAIN------------------
+-------------------------------------------------------*/
+static void thongbao(GtkButton *button,GtkWindow *parent)
+{
+GtkWidget *dialog;
+if(kt==0)
+	return;
+	
+else if(kt==47)
+	dialog = gtk_message_dialog_new (parent, GTK_DIALOG_MODAL,GTK_MESSAGE_WARNING, GTK_BUTTONS_OK,"Khong tim thay tu nay!");
+else dialog = gtk_message_dialog_new (parent, GTK_DIALOG_MODAL,GTK_MESSAGE_OTHER, GTK_BUTTONS_OK,"That bai!");
+
+	gtk_window_set_title (GTK_WINDOW (dialog), "Thong bao");
+	gtk_dialog_run (GTK_DIALOG (dialog));
+	gtk_widget_destroy (dialog);
+}
+/*-----------------CHUC NANG THONG BAO -----------------
+---------------------TRONG CUA SO TOOL------------------
+-------------------------------------------------------*/
+static void thongbao2(GtkButton *button,GtkWindow *parent)
+{
+GtkWidget *dialog;
+if(kt2==0)
+	dialog = gtk_message_dialog_new (parent, GTK_DIALOG_MODAL,GTK_MESSAGE_INFO, GTK_BUTTONS_OK,"Thanh Cong!");
+else dialog = gtk_message_dialog_new (parent, GTK_DIALOG_MODAL,GTK_MESSAGE_INFO, GTK_BUTTONS_OK,"That bai!");
+
+	gtk_window_set_title (GTK_WINDOW (dialog), "Ket qua");
+	gtk_dialog_run (GTK_DIALOG (dialog));
+	gtk_widget_destroy (dialog);
+}
+static void thongbao3(GtkButton *button,GtkWindow *parent)
+{
+	GtkWidget *dialog;
+if(kt!=0)
+{
+	dialog = gtk_message_dialog_new (parent, GTK_DIALOG_MODAL,GTK_MESSAGE_WARNING, GTK_BUTTONS_OK,"Khong co tu nay!Hay them nghia moi!");
+	gtk_window_set_title (GTK_WINDOW (dialog), "Thong bao");
+	gtk_dialog_run (GTK_DIALOG (dialog));
+	gtk_widget_destroy (dialog);
+}
+}
+/*----------------CHUC NANG TRO GIUP--------
+-------------------TRONG CUA SO MAIN--------*/
+static void trogiup(GtkWidget *button,gpointer data)
+{
+        GdkPixbuf *pixbuf = gdk_pixbuf_new_from_file("./image/help.png", NULL);
+	GtkWidget *dialog = gtk_about_dialog_new();
+	gtk_about_dialog_set_name(GTK_ABOUT_DIALOG(dialog), "Help");
+	gtk_about_dialog_set_copyright(GTK_ABOUT_DIALOG(dialog),"1. Hay nhap vao tu muon tim kiem\n2.Neu tu duoc tim thay, nghia cua tu se xuat hien va ban co the chinh sua.\n3.Neu khong co tu nay thi ban co the them nghia moi cho no.\n4.Khi hoan tat chinh sua, an vao nut ''Save'' de luu lai.\n5.Ban cung co the xoa tu nay bang cach an vao nut ''Delete''.");
+	gtk_about_dialog_set_logo(GTK_ABOUT_DIALOG(dialog), pixbuf);
+	g_object_unref(pixbuf), pixbuf = NULL;
+	gtk_dialog_run(GTK_DIALOG (dialog));
+	gtk_widget_destroy(dialog);
+	
+}
+/*----------------CHUC NANG XOA TU------------
+-----------------------------------------------*/
+void Delete(GtkWidget *button,gpointer data)
+{
+	BTA *bt;
+	bt=btopn("dict",0,0);
+	kt2=btdel(bt,word);
+	btcls(bt);
+}
+/*---------------CHUC NANG TIM KIEM NHUNG CO THE CHINH SUA TEXT------
+---------------------TRONG CUA SO TOOL-------------------------------
+---------------------------------------------------------------------*/
+void edit(GtkWidget *button,gpointer data)
+{
+	GtkTextBuffer *buffer;
+		buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (data));
+	if(kt==0)
+	{
+	gchar text[100000];
+	char c;
+	int i,j;
+	FILE *f=fopen("anhviet.dict","rb");
+	if(f==NULL)
+	{
+		perror("\nLoi mo file dict de doc:");
+		return;
+	}
+	i=0;
+	fseek(f,p.pos,SEEK_SET);
+	for(j=0;j<p.len;j++)
+	{
+		fread(&c,sizeof(char),1,f);
+		text[i++]=c;
+	}
+	text[i]='\0';
+	
+		gtk_text_buffer_set_text (buffer, text,-1);
+	fclose(f);
+	}
+	else
+	{
+		gchar text[5];
+		text[0]='\0';
+		gtk_text_buffer_set_text (buffer, text,-1);
+	}
+	gtk_text_view_set_editable (GTK_TEXT_VIEW (data), TRUE);
+}
+/*---------------LAY TEXT TU ENTRY VA TEXT_VIEW TRONG CUA SO TOOL-----------------------
+----------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------*/
+char *get_from_entry(GtkWidget *button,gpointer data)
+{
+	const char* word2=gtk_entry_get_text(GTK_ENTRY(data));
+	word=(char *)word2;
+	return word;
+}
+char *get_from_text_view(GtkWidget *button,gpointer data)
+{
+	GtkTextBuffer *buffer;
+	GtkTextIter start, end;
+	buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW(data));
+	gtk_text_buffer_get_start_iter(buffer,&start);
+    gtk_text_buffer_get_end_iter (buffer,&end);
+	mean = gtk_text_buffer_get_text (buffer, &start, &end, FALSE);
+	return mean;
+}
+/*-------------------CHUC NANG THEM TU MOI------------
+-----------------------VA CHINH SUA TU----------------
+------------------------------------------------------*/
+void ghifile(GtkWidget *button,gpointer data)
+{
+	info p0;
+	int kt,rsize;
+	BTA *bt;
+	bt=btopn("dict",0,0);
+	kt=btsel(bt,word,(char*)&p0,sizeof(info),&rsize);
+	info p;
+	long pos,len;
+	FILE *f1=fopen("anhviet.dict","a+");
+	FILE *f2=fopen("anhviet.dict","rb");
+	fseek(f2,0,SEEK_END);
+	pos=ftell(f2);
+	fprintf(f1,"\n%s",mean);
+	fclose(f1);
+	fclose(f2);
+	f2=fopen("anhviet.dict","rb");
+	fseek(f2,0,SEEK_END);
+	len=ftell(f2)-pos;
+	p.pos=pos;
+	p.len=len;
+	fclose(f2);
+	if(kt!=0)
+	{
+		kt2=btins(bt,word,(char *)&p,sizeof(info));
+	}
+	else 
+	{
+		kt2=btupd(bt,word,(char*)&p,sizeof(info));
+	}
+	btcls(bt);
+
+}
+/*--------------------------------------------------------------
+--------------------CHUC NANG TIM KIEM TRONG CUA SO MAIN--------
+------------------------------VA CUA SO TOOL--------------------*/		
+
+info search(GtkWidget *button,gpointer data)
+{
+        int i;
+        char const *word=gtk_entry_get_text((GTK_ENTRY(data)));
+	char *word2;
+	word2=(char *)word;
+	for (i=0;i<strlen(word);i++)
+	  {
+	    if (word2[i] >= 'A' && word2[i] <= 'Z') 
+	      word2[i] = word2[i] - 'A' + 'a';
+	  }
+	BTA *bt;
+	int rsize;
+	bt=btopn("dict",0,0);
+	kt=btsel(bt,word2,(char*)&p,sizeof(info),&rsize);
+	btcls(bt);
+	return p;
+}
+void hiennghia(GtkWidget *button,gpointer data)
+{
+	GtkTextBuffer *buffer;
+		buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (data));
+	if(kt==0)
+	{
+	gchar text[100000];
+	char c;
+	int i,j;
+	FILE *f=fopen("anhviet.dict","rb");
+	if(f==NULL)
+	{
+		perror("\nLoi mo file dict de doc:");
+		return;
+	}
+	i=0;
+	fseek(f,p.pos,SEEK_SET);
+	for(j=0;j<p.len;j++)
+	{
+		fread(&c,sizeof(char),1,f);
+		text[i++]=c;
+	}
+	text[i]='\0';
+	
+		gtk_text_buffer_set_text (buffer, text,-1);
+	fclose(f);
+	}
+	else
+	{
+		gchar text[5];
+		text[0]='\0';
+		gtk_text_buffer_set_text (buffer, text,-1);
+	}
+	gtk_text_view_set_editable (GTK_TEXT_VIEW (data), FALSE);
+
+}
+/*---------------------------------------------------
+---------TAO ICON CUA SO MAIN VA CUA SO TOOL---------
+-----------------------------------------------------*/
+GdkPixbuf *create_pixbuf(const gchar * filename)
+{
+   GdkPixbuf *pixbuf;
+   GError *error = NULL;
+   pixbuf = gdk_pixbuf_new_from_file(filename, &error);
+   if(!pixbuf) {
+      fprintf(stderr, "%s\n", error->message);
+      g_error_free(error);
+   }
+
+   return pixbuf;
+}
+/*---------------------------------------------------
+---------------------CUA SO CONG CU TOOL-------------
+-----------------------------------------------------*/
+void TOOL()
+{	GtkWidget *window;
+	GtkWidget *label1,*label2;
+	GtkWidget *entry;
+	GtkWidget *button,*button2,*button3,*button4;
+	GtkWidget *textview;
+	GtkWidget *vbox,*hbox,*hbox2;
+	GtkWidget *scrolled_win;
+	/* Create a new GtkLabel widget that is selectable. */
+	window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+	gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
+	label1 = gtk_label_new ("Input Word");
+	label2= gtk_label_new("Edit or Input mean");
+	entry=gtk_entry_new();
+	button=gtk_button_new_with_label ("Save");
+	button2=gtk_button_new_with_label ("Search");
+	button3=gtk_button_new_with_label ("Delete");
+	button4=gtk_button_new_with_label ("Help");
+	textview=gtk_text_view_new();
+	vbox=gtk_vbox_new(FALSE,5);
+	hbox=gtk_hbox_new(FALSE,3);
+	hbox2=gtk_hbox_new(TRUE,5);
+	scrolled_win = gtk_scrolled_window_new (NULL, NULL);
+	gtk_window_set_default_size(GTK_WINDOW(window), 500, 400);
+	gtk_window_set_title (GTK_WINDOW (window), "TOOL");
+	//CALL FUNCTION
+	g_signal_connect (G_OBJECT(button2),"clicked",G_CALLBACK(search),entry);
+	g_signal_connect (G_OBJECT(button2),"clicked",G_CALLBACK(edit),textview);
+	g_signal_connect (G_OBJECT (button2), "clicked",G_CALLBACK (thongbao3),(gpointer)window);
+	g_signal_connect (G_OBJECT (button), "clicked",G_CALLBACK (get_from_entry),entry);
+	g_signal_connect (G_OBJECT (button), "clicked",G_CALLBACK (get_from_text_view),textview);
+	g_signal_connect (G_OBJECT (button), "clicked",G_CALLBACK (ghifile),NULL);
+	g_signal_connect (G_OBJECT (button), "clicked",G_CALLBACK (thongbao2),(gpointer)window);
+	g_signal_connect (G_OBJECT (button3), "clicked",G_CALLBACK (get_from_entry),entry);
+	g_signal_connect (G_OBJECT (button3), "clicked",G_CALLBACK (Delete),NULL);
+	g_signal_connect (G_OBJECT (button3), "clicked",G_CALLBACK (thongbao2),(gpointer)window);
+	g_signal_connect (G_OBJECT (button4), "clicked",G_CALLBACK (trogiup),NULL);
+	g_signal_connect_swapped(G_OBJECT(window), "destroy",
+        G_CALLBACK(question),NULL);
+	//* Add the label as a child widget of the window. */
+	gtk_box_pack_start(GTK_BOX (vbox), label1, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX (hbox), entry, FALSE, FALSE, 5);
+	gtk_box_pack_start(GTK_BOX(hbox),button2,FALSE,FALSE,3);
+	gtk_box_pack_start(GTK_BOX (vbox), hbox, FALSE, FALSE, 5);
+	gtk_box_pack_start(GTK_BOX (vbox), label2, FALSE, FALSE, 5);
+	gtk_container_add (GTK_CONTAINER (scrolled_win), textview);
+	gtk_box_pack_start(GTK_BOX (vbox), scrolled_win,TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX (hbox2), button, FALSE, FALSE, 5);
+	gtk_box_pack_start(GTK_BOX (hbox2), button3, FALSE, FALSE, 5);
+	gtk_box_pack_start(GTK_BOX (hbox2), button4, FALSE, FALSE, 5);
+	gtk_box_pack_start(GTK_BOX (vbox), hbox2, FALSE, FALSE, 5);
+	gtk_container_add(GTK_CONTAINER(window),vbox);
+	gtk_window_set_icon(GTK_WINDOW(window), create_pixbuf("./image/dict2.png"));
+	gtk_widget_show_all(window);
+}on_exit_clicked
+/*---------------------------------------------------
+--------------CUA SO CHINH MAIN----------------------
+-----------------------------------------------------*/
+int main(int argc,char *argv[])
+{
+BTA *bt;
+GtkWidget *window;
+GtkWidget *label1;
+GtkWidget *entry1;
+GtkWidget *button1,*button2,*button3,*button4;
+GtkWidget *hbox1,*hbox2,*vbox;
+GtkWidget *scrolled_win,*textview;
+gtk_init (&argc, &argv);
+window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
+gtk_window_set_title (GTK_WINDOW (window), "Anh Viet Dictionary");
+gtk_window_set_default_size(GTK_WINDOW(window), 500, 400);
+/* Connect the main window to the destroy and delete-event signals. */
+/* Create a new GtkLabel widget that is selectable. */
+button1=gtk_button_new_with_label ("TIM KIEM");
+button2=gtk_button_new_with_label("CONG CU");
+button3=gtk_button_new_with_label("Thong tin");
+button4 = gtk_button_new_from_stock (GTK_STOCK_CLOSE);
+button4=gtk_button_new_with_label("Thoat");
+label1 = gtk_label_new ("Tra tu");
+entry1=gtk_entry_new();
+hbox1=gtk_hbox_new(TRUE,5);
+hbox2=gtk_hbox_new(FALSE,5);
+vbox=gtk_vbox_new(FALSE,5);
+textview = gtk_text_view_new ();
+scrolled_win = gtk_scrolled_window_new (NULL, NULL);
+gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_win),GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
+bt=btopn("dict",0,0);
+if(bt==NULL)
+	{
+		SaveToBtree();
+	}
+btcls(bt);
+button4 = gtk_button_new_from_stock (GTK_STOCK_CLOSE);
+//CALL FUNCTION
+g_signal_connect (G_OBJECT (button1), "clicked",G_CALLBACK (search),entry1);
+g_signal_connect (G_OBJECT (button1), "clicked",G_CALLBACK (hiennghia),textview);
+g_signal_connect (G_OBJECT (button1), "clicked",G_CALLBACK (thongbao),(gpointer)window);
+g_signal_connect (G_OBJECT (button2), "clicked",G_CALLBACK (TOOL),NULL);
+g_signal_connect (G_OBJECT (button3), "clicked",G_CALLBACK (thongtin),(gpointer)window);
+g_signal_connect (G_OBJECT (button4), "clicked",G_CALLBACK (quit),NULL);
+g_signal_connect (G_OBJECT (window), "destroy",G_CALLBACK (quit),NULL);
+/* Add the label as a child widget of the window. */
+gtk_box_pack_start (GTK_BOX (hbox1), button2, FALSE, FALSE, 5);
+gtk_box_pack_start (GTK_BOX (hbox1), button3, FALSE, FALSE, 5);
+gtk_box_pack_start (GTK_BOX (hbox1), button4, FALSE, FALSE, 5);
+gtk_box_pack_start(GTK_BOX (hbox2), label1, FALSE, FALSE, 5);
+gtk_box_pack_start (GTK_BOX (hbox2), entry1, FALSE, FALSE, 5);
+gtk_box_pack_start(GTK_BOX (hbox2), button1,FALSE, FALSE, 5);
+gtk_box_pack_start(GTK_BOX (vbox), hbox1, FALSE, FALSE, 5);
+gtk_box_pack_start (GTK_BOX (vbox), hbox2, FALSE, FALSE, 5);
+gtk_container_add (GTK_CONTAINER (scrolled_win), textview);
+gtk_box_pack_start(GTK_BOX (vbox), scrolled_win,TRUE, TRUE, 0);
+gtk_container_add (GTK_CONTAINER (window), vbox);
+gtk_window_set_icon(GTK_WINDOW(window), create_pixbuf("./image/dict2.png"));
+gtk_widget_show_all (window);
+gtk_main ();
+	
+	return 1;
+}
+//gcc -Wall -g thinghiem.c -o thinghiem `pkg-config --cflags gtk+-2.0` `pkg-config --libs gtk+-2.0`
